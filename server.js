@@ -1,31 +1,20 @@
 require('dotenv').config();
-const express  = require('express');
-const cors     = require('cors');
-const nodemailer = require('nodemailer');
-const path     = require('path');
+const express = require('express');
+const cors    = require('cors');
+const path    = require('path');
 
 const app = express();
 app.use(express.json());
 app.use(cors({ origin: '*' }));
 
-/* block sensitive files from being served */
-app.get('/.env',        (_, res) => res.status(404).end());
-app.get('/server.js',   (_, res) => res.status(404).end());
-app.get('/package.json',(_, res) => res.status(404).end());
+/* block sensitive files */
+app.get('/.env',             (_, res) => res.status(404).end());
+app.get('/server.js',        (_, res) => res.status(404).end());
+app.get('/package.json',     (_, res) => res.status(404).end());
 app.get('/package-lock.json',(_, res) => res.status(404).end());
 
 /* serve the site */
 app.use(express.static(path.join(__dirname)));
-
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-  },
-});
 
 app.post('/enquiry', async (req, res) => {
   const { name, email, phone } = req.body || {};
@@ -51,16 +40,25 @@ app.post('/enquiry', async (req, res) => {
 </div>`;
 
   try {
-    await transporter.sendMail({
-      from: `"CONFIDENTIAL℗" <${process.env.GMAIL_USER}>`,
-      to:   'amaychandra02@gmail.com',
-      replyTo: email,
-      subject: `[CONFIDENTIAL℗] Clearance Request — ${name}`,
-      html,
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'CONFIDENTIAL℗ <onboarding@resend.dev>',
+        to:   ['amaychandra02@gmail.com'],
+        reply_to: email,
+        subject: `[CONFIDENTIAL℗] Clearance Request — ${name}`,
+        html,
+      }),
     });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.message || JSON.stringify(data));
     res.json({ ok: true });
   } catch (err) {
-    console.error('[mail error]', err.message, err.code, err.responseCode);
+    console.error('[mail error]', err.message);
     res.status(500).json({ ok: false, error: err.message });
   }
 });
