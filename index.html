@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CONFIDENTIAL℗ — CASE-01</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#020208;
+  --card:#0a0a12;
+  --border:#1e1e2e;
+  --subtle:#12121a;
+  --red:#cc1414;
+  --red-d:#780808;
+  --text:#f2ece0;
+  --sub:#d0c8b8;
+  --muted:#8a8090;
+  --mono:'Space Mono',monospace;
+  --display:'Bebas Neue',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--mono);
+  overflow-x:hidden;
+  cursor:crosshair;
+}
+
+/* ── GRAIN ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;z-index:9998;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay;
+  opacity:.7;
+}
+
+/* ── SCANLINES ── */
+body::after{
+  content:'';
+  position:fixed;inset:0;z-index:9997;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.13) 0px,rgba(0,0,0,.13) 1px,transparent 1px,transparent 3px);
+}
+
+/* ── CLASSIFICATION BARS ── */
+.class-bar{
+  position:fixed;left:0;right:0;z-index:9000;
+  background:#cc1414;
+  padding:4px 20px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:var(--mono);font-size:10px;font-weight:700;
+  letter-spacing:3px;color:#fff;
+}
+.class-bar-top{top:0}
+.class-bar-bottom{bottom:0}
+.class-bar span{opacity:.88}
+
+/* ── PAGE SCAN LINE (load animation) ── */
+#scan-line{
+  position:fixed;left:0;right:0;top:28px;height:2px;z-index:8999;
+  background:linear-gradient(90deg,transparent,var(--red),transparent);
+  box-shadow:0 0 16px 4px rgba(204,20,20,.5);
+  animation:scanDown 2.2s cubic-bezier(.4,0,.2,1) forwards;
+  pointer-events:none;
+}
+@keyframes scanDown{
+  0%{top:28px;opacity:1}
+  85%{opacity:1}
+  100%{top:calc(100vh - 28px);opacity:0}
+}
+
+/* ── LAYOUT ── */
+main{padding-top:28px;padding-bottom:28px}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  position:relative;
+  overflow:hidden;
+  padding:80px 24px 80px;
+}
+.hero-bg-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(204,20,20,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(204,20,20,.04) 1px,transparent 1px);
+  background-size:60px 60px;
+  mask-image:radial-gradient(ellipse 80% 70% at 50% 50%,black 30%,transparent 80%);
+}
+.hero-inner{
+  position:relative;
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;
+  width:100%;max-width:900px;
+  gap:0;
+}
+
+/* case file header */
+.case-header{
+  display:inline-flex;align-items:center;gap:16px;
+  margin-bottom:36px;
+  font-size:13px;letter-spacing:4px;color:var(--sub);
+  border:1px solid var(--border);
+  padding:10px 26px;
+  position:relative;
+}
+.case-header::before,.case-header::after{
+  content:'';position:absolute;
+  width:8px;height:8px;
+  border-color:var(--red);border-style:solid;
+}
+.case-header::before{top:-1px;left:-1px;border-width:2px 0 0 2px}
+.case-header::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0}
+.case-status-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--red);
+  box-shadow:0 0 8px var(--red);
+  animation:pulse-dot 1.2s infinite;
+  flex-shrink:0;
+}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.25}}
+.case-num{color:var(--text);font-weight:700}
+
+/* fingerprint container */
+.thermal-wrap{
+  position:relative;
+  margin:0 0 36px;
+  transform:rotate(-10deg) skew(-2deg,1deg);
+  filter:drop-shadow(0 0 40px rgba(200,20,20,.38)) drop-shadow(0 0 20px rgba(140,10,10,.28));
+}
+#thermal-canvas{
+  display:block;
+  width:300px;height:390px;
+}
+.exhibit-tag{
+  position:absolute;
+  bottom:-24px;left:50%;
+  transform:translateX(-50%);
+  font-size:9px;letter-spacing:3px;color:var(--muted);
+  white-space:nowrap;
+  border-top:1px solid var(--red);
+  padding-top:5px;
+}
+
+/* brand */
+.hero-brand{
+  font-family:var(--display);
+  font-size:clamp(72px,14vw,160px);
+  line-height:.92;
+  letter-spacing:5px;
+  color:var(--text);
+  animation:fadeInUp .8s ease both;
+  animation-delay:99s;
+  margin-top:52px;
+}
+.hero-brand .pm{
+  font-size:.4em;
+  vertical-align:super;
+  color:var(--red);
+}
+.hero-tagline{
+  font-size:17px;letter-spacing:10px;
+  color:var(--sub);margin-top:16px;
+  text-transform:uppercase;
+  animation:fadeInUp .8s ease both;
+  animation-delay:99s;
+}
+.hero-meta{
+  display:flex;gap:32px;
+  margin-top:32px;
+  font-size:12px;letter-spacing:3px;color:var(--muted);
+  flex-wrap:wrap;justify-content:center;
+  opacity:0;transition:opacity .8s .3s;
+}
+.hero-meta span::before{content:'[ '}
+.hero-meta span::after{content:' ]'}
+
+@keyframes fadeInUp{
+  from{opacity:0;transform:translateY(18px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ── CORNER BRACKETS UTILITY ── */
+.bracket{
+  position:relative;
+}
+.bracket::before,.bracket::after{
+  content:'';position:absolute;
+  width:18px;height:18px;
+  border-color:rgba(204,20,20,.35);border-style:solid;
+}
+.bracket::before{top:0;left:0;border-width:2px 0 0 2px}
+.bracket::after{top:0;right:0;border-width:2px 2px 0 0}
+.bracket>.bl,.bracket>.br{
+  content:'';position:absolute;
+  width:18px;height:18px;
+  border-color:rgba(204,20,20,.35);border-style:solid;
+}
+.bracket>.bl{bottom:0;left:0;border-width:0 0 2px 2px}
+.bracket>.br{bottom:0;right:0;border-width:0 2px 2px 0}
+
+/* ── SECTIONS ── */
+section{
+  max-width:1100px;
+  margin:0 auto;
+  padding:80px 24px;
+}
+.section-label{
+  font-size:12px;letter-spacing:5px;color:var(--red);
+  margin-bottom:12px;display:flex;align-items:center;gap:12px;
+}
+.section-label::before{
+  content:'';display:block;width:24px;height:1px;background:var(--red);
+}
+.section-title{
+  font-family:var(--display);
+  font-size:clamp(48px,7vw,96px);
+  line-height:.95;letter-spacing:2px;
+  color:var(--text);margin-bottom:40px;
+}
+.divider{
+  height:1px;background:var(--border);
+  max-width:1100px;margin:0 auto;
+  position:relative;
+}
+.divider::before{
+  content:'◆';
+  position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%);
+  font-size:8px;color:var(--red);
+  background:var(--bg);padding:0 12px;
+}
+
+/* ── MARQUEE ── */
+.marquee-wrap{
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  overflow:hidden;padding:14px 0;
+  background:var(--subtle);
+}
+.marquee-track{
+  display:flex;
+  animation:scroll 22s linear infinite;
+  width:max-content;
+}
+.marquee-track span{
+  font-size:14px;letter-spacing:5px;color:var(--muted);
+  padding:0 32px;white-space:nowrap;
+}
+.marquee-track .acc{color:var(--red)}
+@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ── STATUS BLOCKS ── */
+.status-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);
+  margin-bottom:60px;
+}
+.status-block{
+  background:var(--card);
+  padding:28px 24px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.status-block::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--red);
+}
+.status-val{
+  font-family:var(--display);
+  font-size:clamp(36px,5vw,68px);
+  letter-spacing:2px;
+  color:var(--text);
+  display:block;margin-bottom:6px;
+}
+.status-val.active-val{color:var(--red)}
+.status-key{font-size:11px;letter-spacing:4px;color:var(--muted)}
+
+/* ── EVIDENCE LOCKER ── */
+.evidence-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1px;
+  background:var(--border);
+  border:1px solid var(--border);
+  padding:2px;
+}
+.evidence-card{
+  background:var(--card);
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
+  transition:background .25s;
+}
+.evidence-card:hover{background:#0f0f1a}
+.exhibit-strip{
+  background:var(--red);
+  padding:6px 16px;
+  font-size:9px;letter-spacing:4px;color:#fff;font-weight:700;
+  display:flex;justify-content:space-between;
+}
+.card-img-placeholder{
+  height:240px;
+  background:var(--subtle);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;letter-spacing:3px;color:var(--muted);
+  border-bottom:1px solid var(--border);
+  position:relative;
+  overflow:hidden;
+}
+.card-img-placeholder::before{
+  content:'';position:absolute;inset:0;
+  background:
+    linear-gradient(45deg,transparent 49%,rgba(204,20,20,.05) 50%,transparent 51%),
+    linear-gradient(-45deg,transparent 49%,rgba(204,20,20,.05) 50%,transparent 51%);
+  background-size:24px 24px;
+}
+.card-img-placeholder .coming{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+}
+.card-img-placeholder .lock-icon{font-size:28px;opacity:.18}
+.card-body{padding:20px 18px 24px;display:flex;flex-direction:column;flex:1}
+.card-case{font-size:11px;letter-spacing:4px;color:var(--red);margin-bottom:8px}
+.card-name{
+  font-family:var(--display);
+  font-size:36px;letter-spacing:2px;
+  color:var(--text);margin-bottom:6px;
+}
+.card-sub{font-size:13px;letter-spacing:2px;color:var(--sub);margin-bottom:16px}
+.card-tags{margin-bottom:16px}
+.card-tag{
+  display:inline-block;
+  font-size:9px;letter-spacing:2px;
+  background:var(--subtle);color:var(--muted);
+  border:1px solid var(--border);
+  padding:3px 8px;margin-right:4px;margin-bottom:4px;
+}
+.card-serial{
+  font-size:9px;letter-spacing:3px;color:var(--border);
+  border-top:1px solid var(--border);
+  padding-top:12px;
+  margin-top:auto;
+  display:flex;justify-content:space-between;
+}
+
+/* ── DOSSIER ── */
+.dossier{
+  background:var(--card);
+  border:1px solid var(--border);
+  padding:40px;
+}
+.dossier-header{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  margin-bottom:32px;
+  padding-bottom:20px;
+  border-bottom:1px solid var(--border);
+  flex-wrap:wrap;gap:16px;
+}
+.dossier-meta{font-size:12px;letter-spacing:3px;color:var(--sub);line-height:2.4}
+.dossier-stamp{
+  font-family:var(--display);
+  font-size:clamp(18px,3vw,32px);
+  color:rgba(204,20,20,.14);
+  border:3px solid rgba(204,20,20,.14);
+  padding:6px 18px;
+  letter-spacing:6px;
+  transform:rotate(-8deg);
+  white-space:nowrap;
+  align-self:center;
+}
+.dossier-body{font-size:15px;line-height:2.1;color:var(--text)}
+.redacted{
+  background:var(--text);color:var(--text);
+  border-radius:1px;
+  padding:0 4px;
+  cursor:not-allowed;
+  user-select:none;
+  transition:background .2s,color .2s;
+}
+.redacted:hover{background:var(--red);color:var(--red)}
+.dossier-note{
+  margin-top:28px;
+  padding:16px 20px;
+  border-left:2px solid var(--red);
+  background:rgba(204,20,20,.06);
+  font-size:13px;letter-spacing:2px;color:var(--sub);
+  font-style:italic;
+}
+
+/* ── TIMELINE ── */
+.timeline{
+  position:relative;
+  padding-left:48px;
+}
+.timeline::before{
+  content:'';
+  position:absolute;left:8px;top:8px;bottom:8px;
+  width:1px;background:var(--border);
+}
+.timeline-item{
+  position:relative;
+  margin-bottom:44px;
+  opacity:0;transform:translateX(20px);
+  transition:opacity .5s,transform .5s;
+}
+.timeline-item.visible{opacity:1;transform:none}
+.timeline-item::before{
+  content:'';
+  position:absolute;left:-44px;top:5px;
+  width:10px;height:10px;
+  border:1px solid var(--red);
+  background:var(--bg);
+  transform:rotate(45deg);
+}
+.timeline-item.active-phase::before{
+  background:var(--red);
+  box-shadow:0 0 12px var(--red);
+}
+.timeline-phase{font-size:11px;letter-spacing:4px;color:var(--red);margin-bottom:8px}
+.timeline-title{
+  font-family:var(--display);
+  font-size:clamp(26px,3.5vw,44px);
+  letter-spacing:2px;color:var(--text);
+  margin-bottom:8px;
+}
+.timeline-desc{font-size:14px;letter-spacing:1px;color:var(--sub);line-height:2}
+.timeline-date{font-size:11px;letter-spacing:3px;color:var(--muted);margin-top:10px}
+
+/* ── CLEARANCE FORM ── */
+.form-wrap{
+  background:var(--card);
+  border:1px solid var(--border);
+  padding:40px;
+}
+.form-top-bar{
+  background:var(--red);
+  margin:-40px -40px 32px;
+  padding:10px 40px;
+  font-size:10px;letter-spacing:4px;color:#fff;font-weight:700;
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;
+}
+.form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+.form-field{display:flex;flex-direction:column;gap:8px}
+.form-field.full{grid-column:1/-1}
+.form-field label{font-size:11px;letter-spacing:4px;color:var(--sub)}
+.form-field input{
+  background:var(--subtle);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-family:var(--mono);font-size:15px;
+  padding:14px 18px;
+  outline:none;
+  appearance:none;-webkit-appearance:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+.form-field input:focus{
+  border-color:var(--red);
+  box-shadow:0 0 0 2px rgba(204,20,20,.15);
+}
+.form-field input::placeholder{color:var(--muted)}
+.form-note{
+  font-size:12px;letter-spacing:2px;color:var(--sub);
+  grid-column:1/-1;
+  line-height:1.9;
+}
+.form-note a{color:var(--red);text-decoration:none}
+.submit-btn{
+  grid-column:1/-1;
+  background:var(--red);
+  color:#fff;border:none;
+  font-family:var(--display);font-size:26px;letter-spacing:7px;
+  padding:18px 40px;
+  cursor:crosshair;
+  transition:background .2s,box-shadow .2s;
+  position:relative;overflow:hidden;
+}
+.submit-btn::before{
+  content:'';position:absolute;inset:0;
+  background:rgba(255,255,255,.08);
+  transform:translateX(-100%);
+  transition:transform .3s;
+}
+.submit-btn:hover{background:#aa0f0f;box-shadow:0 0 24px rgba(204,20,20,.3)}
+.submit-btn:hover::before{transform:translateX(0)}
+#form-msg{
+  grid-column:1/-1;font-size:11px;letter-spacing:3px;
+  min-height:20px;text-align:center;
+}
+#form-msg.ok{color:#4caf50}
+#form-msg.err{color:var(--red)}
+
+/* ── FOOTER ── */
+footer{
+  border-top:1px solid var(--border);
+  padding:40px 24px 60px;
+  max-width:1100px;margin:0 auto;
+  display:flex;justify-content:space-between;align-items:flex-end;
+  flex-wrap:wrap;gap:24px;
+}
+.footer-brand{
+  font-family:var(--display);
+  font-size:clamp(28px,5vw,64px);
+  line-height:1;letter-spacing:3px;color:var(--border);
+}
+.footer-brand .pm{font-size:.4em;vertical-align:super;color:var(--red)}
+.footer-meta{
+  font-size:9px;letter-spacing:3px;color:var(--muted);
+  line-height:2.2;text-align:right;
+}
+
+/* ── SCROLL REVEAL ── */
+.reveal{
+  opacity:0;transform:translateY(24px);
+  transition:opacity .6s ease,transform .6s ease;
+}
+.reveal.visible{opacity:1;transform:none}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  .form-grid{grid-template-columns:1fr}
+  .form-field.full,.submit-btn,.form-note,#form-msg{grid-column:1}
+  .status-grid{grid-template-columns:1fr}
+  .dossier,.form-wrap{padding:24px}
+  .form-top-bar{margin:-24px -24px 24px;padding:10px 24px}
+  footer{flex-direction:column;align-items:flex-start}
+  .footer-meta{text-align:left}
+  .dossier-header{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- Classification bars -->
+<div class="class-bar class-bar-top">
+  <span>TOP SECRET // CONFIDENTIAL</span>
+  <span>CASE-01 // ACTIVE</span>
+  <span>AUTHORIZED EYES ONLY</span>
+</div>
+<div class="class-bar class-bar-bottom">
+  <span>CLASSIFICATION LEVEL: RESTRICTED</span>
+  <span>DO NOT DISTRIBUTE</span>
+  <span>© CONFIDENTIAL℗ — INDIA OPS</span>
+</div>
+
+<!-- Page-load scan line -->
+<div id="scan-line"></div>
+
+<main>
+
+<!-- ══════════════════════════════════════ HERO -->
+<section class="hero">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-inner">
+
+    <div class="case-header">
+      <div class="case-status-dot"></div>
+      <span class="case-num">CASE-01</span>
+      <span>·</span>
+      <span>STATUS: ACTIVE</span>
+      <span>·</span>
+      <span>SUBJECT: UNKNOWN</span>
+    </div>
+
+    <div class="thermal-wrap">
+      <canvas id="thermal-canvas" width="400" height="520"></canvas>
+      <div class="exhibit-tag">EXHIBIT A — BIOMETRIC EVIDENCE · CASE-01</div>
+    </div>
+
+    <div class="hero-brand" id="hero-brand" style="animation-delay:99s;">
+      CONFIDENTIAL<span class="pm">℗</span>
+    </div>
+    <div class="hero-tagline" id="hero-tagline" style="animation-delay:99s;">SHHHH !!</div>
+
+    <div class="hero-meta" id="hero-meta">
+      <span>28.6139° N, 77.2090° E</span>
+      <span>CLEARANCE LVL 5</span>
+      <span>INDIA OPS DIVISION</span>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span>CASE-01</span><span class="acc">◆</span>
+    <span>EVIDENCE SECURED</span><span class="acc">◆</span>
+    <span>SUBJECT UNIDENTIFIED</span><span class="acc">◆</span>
+    <span>OPERATION ONGOING</span><span class="acc">◆</span>
+    <span>RESTRICTED ACCESS</span><span class="acc">◆</span>
+    <span>DO NOT DISTRIBUTE</span><span class="acc">◆</span>
+    <span>INDIA DIVISION</span><span class="acc">◆</span>
+    <span>CASE-01</span><span class="acc">◆</span>
+    <span>EVIDENCE SECURED</span><span class="acc">◆</span>
+    <span>SUBJECT UNIDENTIFIED</span><span class="acc">◆</span>
+    <span>OPERATION ONGOING</span><span class="acc">◆</span>
+    <span>RESTRICTED ACCESS</span><span class="acc">◆</span>
+    <span>DO NOT DISTRIBUTE</span><span class="acc">◆</span>
+    <span>INDIA DIVISION</span><span class="acc">◆</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ CASE STATUS -->
+<section class="reveal">
+  <div class="section-label">CASE STATUS</div>
+  <div class="status-grid bracket">
+    <div class="bl"></div><div class="br"></div>
+    <div class="status-block">
+      <span class="status-val active-val">ACTIVE</span>
+      <div class="status-key">INVESTIGATION STATUS</div>
+    </div>
+    <div class="status-block">
+      <span class="status-val">03</span>
+      <div class="status-key">EVIDENCE COUNT</div>
+    </div>
+    <div class="status-block">
+      <span class="status-val">INDIA</span>
+      <div class="status-key">JURISDICTION</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════════ EVIDENCE LOCKER -->
+<section class="reveal">
+  <div class="section-label">EVIDENCE LOCKER</div>
+  <div class="section-title">CASE 01<br>DROP</div>
+
+  <div class="evidence-grid bracket">
+    <div class="bl"></div><div class="br"></div>
+
+    <div class="evidence-card">
+      <div class="exhibit-strip">
+        <span>EXHIBIT · 01</span><span>CONF-0001-A</span>
+      </div>
+      <div class="card-img-placeholder">
+        <div class="coming">
+          <div class="lock-icon">⊘</div>
+          <span>EVIDENCE SEALED</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-case">CASE 01 / TEE</div>
+        <div class="card-name">COLOURWAY I</div>
+        <div class="card-sub">CLASSIFIED COLOURWAY — UNDISCLOSED</div>
+        <div class="card-tags">
+          <span class="card-tag">STREETWEAR</span>
+          <span class="card-tag">TEE</span>
+          <span class="card-tag">INDIA</span>
+        </div>
+        <div class="card-serial">
+          <span>SN: CONF-0001-A</span><span>STATUS: SEALED</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="evidence-card">
+      <div class="exhibit-strip">
+        <span>EXHIBIT · 02</span><span>CONF-0001-B</span>
+      </div>
+      <div class="card-img-placeholder">
+        <div class="coming">
+          <div class="lock-icon">⊘</div>
+          <span>EVIDENCE SEALED</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-case">CASE 01 / TEE</div>
+        <div class="card-name">COLOURWAY II</div>
+        <div class="card-sub">CLASSIFIED COLOURWAY — UNDISCLOSED</div>
+        <div class="card-tags">
+          <span class="card-tag">STREETWEAR</span>
+          <span class="card-tag">TEE</span>
+          <span class="card-tag">INDIA</span>
+        </div>
+        <div class="card-serial">
+          <span>SN: CONF-0001-B</span><span>STATUS: SEALED</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="evidence-card">
+      <div class="exhibit-strip">
+        <span>EXHIBIT · 03</span><span>CONF-0001-C</span>
+      </div>
+      <div class="card-img-placeholder">
+        <div class="coming">
+          <div class="lock-icon">⊘</div>
+          <span>EVIDENCE SEALED</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-case">CASE 01 / LOWER</div>
+        <div class="card-name">DENIM / JOGGER</div>
+        <div class="card-sub">VARIANT UNDETERMINED — PENDING RELEASE</div>
+        <div class="card-tags">
+          <span class="card-tag">STREETWEAR</span>
+          <span class="card-tag">LOWER</span>
+          <span class="card-tag">INDIA</span>
+        </div>
+        <div class="card-serial">
+          <span>SN: CONF-0001-C</span><span>STATUS: SEALED</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════════ DOSSIER -->
+<section class="reveal">
+  <div class="section-label">CLASSIFIED DOSSIER</div>
+  <div class="section-title">CASE NOTES</div>
+
+  <div class="dossier bracket">
+    <div class="bl"></div><div class="br"></div>
+
+    <div class="dossier-header">
+      <div class="dossier-meta">
+        <div>CASE #: CONF-0001</div>
+        <div>FILED: <span class="redacted">██-██-2026</span></div>
+        <div>DIVISION: INDIA OPS / STREETWEAR UNIT</div>
+        <div>HANDLER: <span class="redacted">REDACTED</span></div>
+        <div>CLEARANCE: LEVEL 5 — EYES ONLY</div>
+      </div>
+      <div class="dossier-stamp">CONFIDENTIAL</div>
+    </div>
+
+    <div class="dossier-body">
+      <p>
+        Subject identified as an underground <span class="redacted">REDACTED</span> operating out of
+        <span class="redacted">NEW DELHI</span>, India. The organization produces
+        <span class="redacted">CLASSIFIED</span> garments distributed through
+        <span class="redacted">UNDISCLOSED CHANNELS</span>.
+      </p>
+      <br/>
+      <p>
+        Surveillance initiated following unusual activity in the
+        <span class="redacted">STREETWEAR INTELLIGENCE</span> sector. Evidence collected
+        points to a deliberate effort to remain <span class="redacted">BELOW RADAR</span> while
+        building a network of <span class="redacted">█████████</span> across India.
+      </p>
+      <br/>
+      <p>
+        Three pieces of physical evidence (EXHIBITS 01–03) have been secured and logged.
+        Their specifications remain <span class="redacted">CLASSIFIED</span> pending
+        the official release date: <span class="redacted">DATE UNKNOWN</span>.
+      </p>
+    </div>
+
+    <div class="dossier-note">
+      ⚠ NOTE TO FIELD AGENTS: Do not engage the subject. Do not share this document.
+      Your identity has been logged. This dossier self-destructs upon unauthorized access.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════════ TIMELINE -->
+<section class="reveal">
+  <div class="section-label">CASE TIMELINE</div>
+  <div class="section-title">OPERATION<br>PHASES</div>
+
+  <div class="timeline">
+
+    <div class="timeline-item active-phase">
+      <div class="timeline-phase">PHASE 01 — CURRENT</div>
+      <div class="timeline-title">OPERATION INITIATE</div>
+      <div class="timeline-desc">
+        Target identified. Evidence collected. Intel network being established across India.
+        All assets briefed. Awaiting deployment clearance.
+      </div>
+      <div class="timeline-date">STATUS: ACTIVE · TIMESTAMP: <span class="redacted">CLASSIFIED</span></div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-phase">PHASE 02 — UPCOMING</div>
+      <div class="timeline-title">DROP AUTHORIZED</div>
+      <div class="timeline-desc">
+        CASE 01 evidence (EXHIBITS 01–03) to be released to cleared personnel.
+        Drop date and coordinates remain classified. Register below for access.
+      </div>
+      <div class="timeline-date">STATUS: PENDING · ETA: <span class="redacted">REDACTED</span></div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-phase">PHASE 03 — FUTURE</div>
+      <div class="timeline-title">EXPANSION PROTOCOL</div>
+      <div class="timeline-desc">
+        Extended network activation. New case files to be opened.
+        Additional subjects under investigation. Details: <span class="redacted">CLASSIFIED</span>.
+      </div>
+      <div class="timeline-date">STATUS: SEALED · ACCESS DENIED</div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════════ CLEARANCE FORM -->
+<section class="reveal">
+  <div class="section-label">REQUEST ACCESS</div>
+  <div class="section-title">CLEARANCE<br>REQUEST</div>
+
+  <div class="form-wrap bracket">
+    <div class="bl"></div><div class="br"></div>
+    <div class="form-top-bar">
+      <span>FORM CF-001 // CIVILIAN CLEARANCE REQUEST</span>
+      <span>INDIA DIVISION — AUTHORIZED USE ONLY</span>
+    </div>
+    <form id="reg-form" novalidate>
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="f-name">OPERATIVE DESIGNATION (NAME)</label>
+          <input id="f-name" type="text" placeholder="ENTER DESIGNATION" autocomplete="off"/>
+        </div>
+        <div class="form-field">
+          <label for="f-email">SECURE CHANNEL (EMAIL)</label>
+          <input id="f-email" type="email" placeholder="ENTER SECURE EMAIL" autocomplete="off"/>
+        </div>
+        <div class="form-field full">
+          <label for="f-phone">CONTACT FREQUENCY (INDIAN MOBILE)</label>
+          <input id="f-phone" type="tel" placeholder="+91 XXXXXXXXXX" maxlength="14" autocomplete="off"/>
+        </div>
+        <p class="form-note">
+          By submitting this form you acknowledge that your identity is being logged.
+          This operation is restricted to <a href="#">Indian operatives</a> only.
+          All data is encrypted and classified.
+        </p>
+        <button class="submit-btn" type="submit">REQUEST CLEARANCE</button>
+        <div id="form-msg"></div>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ FOOTER -->
+<footer>
+  <div class="footer-brand">CONFIDENTIAL<span class="pm">℗</span></div>
+  <div class="footer-meta">
+    <div>CASE-01 · ACTIVE</div>
+    <div>INDIA OPS DIVISION</div>
+    <div>28.6139°N 77.2090°E</div>
+    <div>SN: CF-WEB-001-2026</div>
+    <div style="color:var(--red);margin-top:8px;letter-spacing:4px">TOP SECRET // CONFIDENTIAL</div>
+  </div>
+</footer>
+
+</main>
+
+<script>
+/* ══════════════════ FINGERPRINT CANVAS ══════════════════ */
+(function(){
+  const canvas = document.getElementById('thermal-canvas');
+  canvas.width = 400; canvas.height = 520;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+
+  /* whorl centre */
+  const CX=W*0.50, CY=H*0.44;
+  const NUM=48, MIN_R=5, MAX_R=W*0.43;
+  const STEPS=420;
+
+  /* pre-build ridge arrays */
+  const ridges=[];
+  for(let i=0;i<NUM;i++){
+    const t=i/(NUM-1);
+    const rx=MIN_R+(MAX_R-MIN_R)*Math.pow(t,0.77);
+    const ry=rx*1.30;
+    const lw=Math.max(1.0,2.9-t*1.65);
+    const op=Math.max(0.40,0.88-t*0.32);
+    const ps=rx*(0.11+t*0.058);
+    const pts=[];
+    for(let s=0;s<=STEPS;s++){
+      const a=(s/STEPS)*Math.PI*2;
+      const nx=Math.cos(a*2.73+i*0.831+1.13)*0.37
+              +Math.cos(a*5.31+i*1.471+2.27)*0.21
+              +Math.cos(a*1.17+i*2.031+0.55)*0.18
+              +Math.cos(a*8.43+i*0.921+3.14)*0.085;
+      const ny=Math.sin(a*2.73+i*0.831+1.13)*0.37
+              +Math.sin(a*5.31+i*1.471+2.27)*0.21
+              +Math.sin(a*1.17+i*2.031+0.55)*0.18
+              +Math.sin(a*8.43+i*0.921+3.14)*0.085;
+      const x=CX+(rx+nx*ps)*Math.cos(a)+nx*ps*0.22;
+      const y=CY+(ry+ny*ps)*Math.sin(a)+ny*ps*0.22;
+      const gv=Math.abs(Math.sin(a*6.37+i*3.71+0.5)*Math.cos(a*4.13+i*2.29+1.2));
+      const gt=0.046+t*0.073+(i%3===0?0.021:0)+(i%7===1?0.029:0);
+      pts.push({x,y,gap:gv<gt});
+    }
+    ridges.push({pts,lw,op});
+  }
+
+  /* clip to fingerprint oval */
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(CX,CY+H*0.04,W*0.43,H*0.46,0,0,Math.PI*2);
+  ctx.clip();
+
+  function tick(idx){
+    if(idx>=ridges.length){ ctx.restore(); finish(); return; }
+    const {pts,lw,op}=ridges[idx];
+    ctx.strokeStyle=`rgba(238,228,210,${op})`;
+    ctx.lineWidth=lw; ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.beginPath();
+    let drawing=false;
+    for(const p of pts){
+      if(p.gap){drawing=false;continue;}
+      if(!drawing){ctx.moveTo(p.x,p.y);drawing=true;}
+      else ctx.lineTo(p.x,p.y);
+    }
+    ctx.stroke();
+    setTimeout(()=>tick(idx+1),28);
+  }
+
+  function finish(){
+    /* film grain */
+    const id=ctx.getImageData(0,0,W,H),d=id.data;
+    for(let i=0;i<d.length;i+=4){
+      const n=(Math.random()-.5)*14;
+      d[i]=Math.max(0,Math.min(255,d[i]+n));
+      d[i+1]=Math.max(0,Math.min(255,d[i+1]+n));
+      d[i+2]=Math.max(0,Math.min(255,d[i+2]+n));
+    }
+    ctx.putImageData(id,0,0);
+    /* corner brackets */
+    const bw=22;
+    ctx.strokeStyle='rgba(204,20,20,.42)';ctx.lineWidth=1.5;
+    [[0,0,1,1],[W,0,-1,1],[0,H,1,-1],[W,H,-1,-1]].forEach(([x,y,dx,dy])=>{
+      ctx.beginPath();ctx.moveTo(x,y+dy*bw);ctx.lineTo(x,y);ctx.lineTo(x+dx*bw,y);ctx.stroke();
+    });
+    /* text overlays */
+    ctx.fillStyle='rgba(255,255,255,.16)';ctx.textAlign='left';
+    ctx.font='bold 11px Space Mono,monospace';
+    ctx.fillText('BIOMETRIC / FINGERPRINT',12,H-16);
+    ctx.fillText('CASE-01 / EXHIBIT-A',12,20);
+    /* reveal hero */
+    setTimeout(()=>{
+      document.getElementById('hero-brand').style.animationDelay='0s';
+      document.getElementById('hero-tagline').style.animationDelay='.2s';
+      document.getElementById('hero-meta').style.opacity='1';
+    },200);
+  }
+
+  tick(0);
+
+})();
+
+/* ══════════════════ SCROLL REVEAL ══════════════════ */
+(function(){
+  const io=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target)}
+    });
+  },{threshold:.1});
+  document.querySelectorAll('.reveal,.timeline-item').forEach(el=>io.observe(el));
+})();
+
+/* ══════════════════ FORM ══════════════════ */
+(function(){
+  const form=document.getElementById('reg-form');
+  const msg=document.getElementById('form-msg');
+
+  document.getElementById('f-phone').addEventListener('input',function(){
+    const cursor=this.selectionStart;
+    const raw=this.value;
+    let digits=raw.startsWith('+91 ')?raw.slice(4).replace(/[^\d]/g,''):raw.replace(/[^\d]/g,'');
+    if(digits.length>10)digits=digits.slice(0,10);
+    const next=digits.length?'+91 '+digits:'';
+    if(raw!==next){
+      this.value=next;
+      const pos=Math.max(4,Math.min(cursor,next.length));
+      this.setSelectionRange(pos,pos);
+    }
+  });
+  document.getElementById('f-phone').addEventListener('keydown',function(e){
+    if((e.key==='Backspace'||e.key==='Delete')&&this.selectionStart<=4&&this.selectionEnd<=4)e.preventDefault();
+  });
+
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    const name=document.getElementById('f-name').value.trim();
+    const email=document.getElementById('f-email').value.trim();
+    const rawPhone=document.getElementById('f-phone').value;
+    const phone=rawPhone.startsWith('+91 ')?rawPhone.slice(4).replace(/[^\d]/g,''):rawPhone.replace(/[^\d]/g,'');
+    if(!name){msg.textContent='[ DESIGNATION REQUIRED ]';msg.className='err';return}
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){msg.textContent='[ INVALID SECURE CHANNEL ]';msg.className='err';return}
+    if(!/^[6-9]\d{9}$/.test(phone)){msg.textContent='[ INVALID INDIAN FREQUENCY — 10 DIGITS, STARTS 6–9 ]';msg.className='err';return}
+    const btn=form.querySelector('.submit-btn');
+    btn.disabled=true;
+    msg.textContent='[ TRANSMITTING… ]';msg.className='';
+    fetch('/enquiry',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name,email,phone})
+    })
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.ok){
+        msg.textContent='[ CLEARANCE REQUEST TRANSMITTED — STANDBY FOR AUTHORIZATION ]';
+        msg.className='ok';
+        form.reset();
+        setTimeout(()=>{msg.textContent='';msg.className=''},7000);
+      } else {
+        msg.textContent='[ TRANSMISSION FAILED — RETRY ]';msg.className='err';
+      }
+    })
+    .catch(()=>{msg.textContent='[ TRANSMISSION ERROR — CHECK CONNECTION ]';msg.className='err';})
+    .finally(()=>{btn.disabled=false;});
+  });
+})();
+</script>
+</body>
+</html>
