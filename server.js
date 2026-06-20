@@ -48,7 +48,7 @@ app.post('/enquiry', async (req, res) => {
       },
       body: JSON.stringify({
         from: 'CONFIDENTIAL℗ <onboarding@resend.dev>',
-        to:   ['amaychandra02@gmail.com'],
+        to:   ['insightinfinity01@gmail.com'],
         reply_to: email,
         subject: `[CONFIDENTIAL℗] Clearance Request — ${name}`,
         html,
