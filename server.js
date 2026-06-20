@@ -18,7 +18,9 @@ app.get('/package-lock.json',(_, res) => res.status(404).end());
 app.use(express.static(path.join(__dirname)));
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_PASS,
@@ -58,8 +60,8 @@ app.post('/enquiry', async (req, res) => {
     });
     res.json({ ok: true });
   } catch (err) {
-    console.error('[mail error]', err.message);
-    res.status(500).json({ ok: false, error: 'Mail delivery failed' });
+    console.error('[mail error]', err.message, err.code, err.responseCode);
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
